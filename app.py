@@ -1,5 +1,7 @@
 from flask import Flask, request, jsonify
 from agent import handle_query
+import yaml
+
 
 app = Flask(__name__)
 
@@ -17,6 +19,16 @@ def chat():
 @app.route("/", methods=["GET"])
 def index():
     return "Zil's LangChain Agent is running!"
+
+
+@app.route("/profile", methods=["GET"])
+def profile():
+    try:
+        with open("config_zil.yaml", "r") as f:
+            config = yaml.safe_load(f)
+        return jsonify(config), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
