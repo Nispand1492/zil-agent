@@ -6,6 +6,8 @@ app = Flask(__name__)
 @app.route("/chat", methods=["POST"])
 def chat():
     data = request.json
+    if data is None:
+        return jsonify({"error": "Invalid JSON body"}), 400
     query = data.get("prompt", "")
     if not query:
         return jsonify({"error": "Missing prompt"}), 400
