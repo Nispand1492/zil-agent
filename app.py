@@ -1,5 +1,5 @@
 from flask import Flask, request, jsonify
-from agent import handle_query
+from agent import run_agent
 import yaml
 
 
@@ -7,13 +7,10 @@ app = Flask(__name__)
 
 @app.route("/chat", methods=["POST"])
 def chat():
-    data = request.json
-    if data is None:
-        return jsonify({"error": "Invalid JSON body"}), 400
-    query = data.get("prompt", "")
-    if not query:
-        return jsonify({"error": "Missing prompt"}), 400
-    response = handle_query(query)
+    data = request.get_json()
+    user_id = data.get("user_id", "zil@example.com")
+    prompt = data["prompt"]
+    response = run_agent(prompt, user_id=user_id)
     return jsonify({"response": response})
 
 @app.route("/", methods=["GET"])

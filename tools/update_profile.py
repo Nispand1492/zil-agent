@@ -1,35 +1,21 @@
-import yaml
+from cosmos_profile import get_profile, save_profile
 
-CONFIG_PATH = "config_zil.yaml"
+def add_to_list_field(user_id: str, field_name: str, item: str) -> str:
+    profile = get_profile(user_id)
+    if item not in profile.get(field_name, []):
+        profile.setdefault(field_name, []).append(item)
+    save_profile(user_id, profile)
+    return f"Added '{item}' to {field_name}."
 
-def load_config():
-    with open(CONFIG_PATH, "r") as f:
-        return yaml.safe_load(f)
+def remove_from_list_field(user_id: str, field_name: str, item: str) -> str:
+    profile = get_profile(user_id)
+    if item in profile.get(field_name, []):
+        profile[field_name].remove(item)
+    save_profile(user_id, profile)
+    return f"Removed '{item}' from {field_name}."
 
-def save_config(config):
-    with open(CONFIG_PATH, "w") as f:
-        yaml.dump(config, f)
-
-def update_skill(skill):
-    config = load_config()
-    if skill not in config["required_skills"]:
-        config["required_skills"].append(skill)
-        save_config(config)
-        return f"Added '{skill}' to skills."
-    return f"'{skill}' already in skills."
-
-def update_title(title):
-    config = load_config()
-    if title not in config["job_titles"]:
-        config["job_titles"].append(title)
-        save_config(config)
-        return f"Added '{title}' to job titles."
-    return f"'{title}' already in titles."
-
-def update_location(location):
-    config = load_config()
-    if location not in config["locations"]:
-        config["locations"].append(location)
-        save_config(config)
-        return f"Added '{location}' to locations."
-    return f"'{location}' already in locations."
+def set_string_field(user_id: str, field_name: str, value: str) -> str:
+    profile = get_profile(user_id)
+    profile[field_name] = value
+    save_profile(user_id, profile)
+    return f"Set {field_name} to '{value}'."

@@ -1,38 +1,44 @@
-import os
-from dotenv import load_dotenv
-
-load_dotenv()  # Load environment variables from .env file
-
-from langchain.agents import initialize_agent, Tool, AgentType
-from tools.update_profile import update_skill, update_title, update_location
+# agent.py
+from langchain.agents import create_openai_functions_agent
+from langchain.prompts import ChatPromptTemplate
 from langchain_openai import AzureChatOpenAI
-from pydantic import SecretStr
+from tools import update_profile
+from functools import partial
+from langchain.agents import Tool
 
+def get_tools_for_user(user_id: str):
+    return [
+        Tool.from_function(
+            name="AddToListField",
+            func=partial(update_profile.add_to_list_field, user_id),
+            description="Add an item to a list field. Args: field_name, item"
+        ),
+        Tool.from_function(
+            name="RemoveFromListField",
+            func=partial(update_profile.remove_from_list_field, user_id),
+            description="Remove an item from a list field. Args: field_name, item"
+        ),
+        Tool.from_function(
+            name="SetStringField",
+            func=partial(update_profile.set_string_field, user_id),
+            description="Set a string field. Args: field_name, value"
+        ),
+    ]
 
-if os.environ.get("WEBSITE_SITE_NAME"):
-    print("Running on Azure App Service")
-else:
-    print("Running locally")
+def run_agent(prompt: str, user_id: str) -> str:
+    tools = get_tools_for_user(user_id)
 
-llm = AzureChatOpenAI(
-    azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT"),
-    api_key=SecretStr(os.getenv("AZURE_OPENAI_API_KEY")), # pyright: ignore[reportArgumentType]
-    api_version=os.getenv("AZURE_OPENAI_VERSION"),
-    azure_deployment=os.getenv("AZURE_OPENAI_DEPLOYMENT")
-)
+    prompt_template = ChatPromptTemplate.from_messages([
+        ("system", "You're a helpful assistant for updating job search profiles. Use tools to update fields based on user's natural language input."),
+        ("user", "{input}")
+    ])
 
-tools = [
-    Tool(name="AddSkill", func=update_skill, description="Add a new required skill"),
-    Tool(name="AddTitle", func=update_title, description="Add a new job title to search for"),
-    Tool(name="AddLocation", func=update_location, description="Add a new job location to consider"),
-]
+    llm = AzureChatOpenAI(
+        # Removed openai_api_version as it is not a valid parameter
+        azure_deployment="gpt-35-turbo",         # replace with your actual deployment name
+        temperature=0
+    )
 
-agent = initialize_agent(
-    tools=tools,
-    llm=llm,
-    agent=AgentType.ZERO_SHOT_REACT_DESCRIPTION,
-    verbose=True
-)
+    agent = create_openai_functions_agent(llm=llm, tools=tools, prompt=prompt_template)
 
-def handle_query(query):
-    return agent.run(query)
+    return agent.invoke({"input": prompt}).output
