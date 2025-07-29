@@ -14,5 +14,9 @@ def chat():
     response = handle_query(query)
     return jsonify({"response": response})
 
+@app.route("/", methods=["GET"])
+def index():
+    return "Zil's LangChain Agent is running!"
+
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
