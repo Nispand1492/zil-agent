@@ -30,5 +30,16 @@ def profile():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+@app.route("/reset-profile", methods=["POST"])
+def reset_profile():
+    try:
+        with open("default_profile.yaml", "r") as default_file:
+            default_config = yaml.safe_load(default_file)
+        with open("config_zil.yaml", "w") as config_file:
+            yaml.dump(default_config, config_file)
+        return jsonify({"message": "Profile reset to empty default"}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
