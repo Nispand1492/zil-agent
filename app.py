@@ -2,7 +2,10 @@ from flask import Flask, request, jsonify
 from agent import run_agent
 from utils.dbutils import get_user_profile, upsert_user_profile
 
+from flask_cors import CORS
+
 app = Flask(__name__)
+CORS(app, origins=["https://salmon-mud-01e8de810.1.azurestaticapps.net"])
 
 @app.route("/chat", methods=["POST"])
 def chat():
@@ -50,7 +53,8 @@ def reset_profile():
         "project_paragraphs": [],
         "strengths_paragraphs": [],
         "custom_profile_notes": "",
-        "user_id": user_id
+        "user_id": user_id,
+        "pending_questions": []
     }
     upsert_user_profile(user_id, default_profile)
     return jsonify({"message": "Profile reset successfully"}), 200
