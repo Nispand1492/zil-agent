@@ -1,7 +1,6 @@
 from flask import Flask, request, jsonify
 from agent import run_agent
-import yaml
-
+from utils.dbutils import get_user_profile, upsert_user_profile
 
 app = Flask(__name__)
 
@@ -20,23 +19,41 @@ def index():
 
 @app.route("/profile", methods=["GET"])
 def profile():
-    try:
-        with open("config_zil.yaml", "r") as f:
-            config = yaml.safe_load(f)
-        return jsonify(config), 200
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+    user_id = request.args.get("user_id", "zil@example.com")
+    profile_data = get_user_profile(user_id)
+    if profile_data:
+        return jsonify(profile_data), 200
+    else:
+        return jsonify({"error": "Profile not found"}), 404
 
 @app.route("/reset-profile", methods=["POST"])
 def reset_profile():
-    try:
-        with open("default_profile.yaml", "r") as default_file:
-            default_config = yaml.safe_load(default_file)
-        with open("config_zil.yaml", "w") as config_file:
-            yaml.dump(default_config, config_file)
-        return jsonify({"message": "Profile reset to empty default"}), 200
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+    user_id = request.args.get("user_id", "zil@example.com")
+    default_profile = {
+        "job_titles": [],
+        "locations": [],
+        "required_skills": [],
+        "industries": [],
+        "employment_type": "",
+        "experience_level": "",
+        "certifications": [],
+        "must_have_keywords": [],
+        "excluded_keywords": [],
+        "education": [],
+        "preferred_company_types": [],
+        "language_preferences": [],
+        "remote_flexibility": "flexible",
+        "minimum_salary_expectation": "",
+        "resume_version_notes": "",
+        "summary_profile": "",
+        "experience_paragraphs": [],
+        "project_paragraphs": [],
+        "strengths_paragraphs": [],
+        "custom_profile_notes": "",
+        "user_id": user_id
+    }
+    upsert_user_profile(user_id, default_profile)
+    return jsonify({"message": "Profile reset successfully"}), 200
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
