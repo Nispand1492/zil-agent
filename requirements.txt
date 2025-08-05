@@ -5,3 +5,4 @@ openai
 langchain>=0.1.17
 langchain-openai>=0.0.7
 langchain-community>=0.0.11
+azure-cosmos
