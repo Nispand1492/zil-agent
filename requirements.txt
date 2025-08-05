@@ -9,3 +9,4 @@ azure-cosmos
 flask-cors
 azure-identity
 gunicorn
+gunicorn[debug]
