@@ -9,13 +9,31 @@ from agent import run_agent
 app = Flask(__name__)
 CORS(app, origins=["https://salmon-mud-01e8de810.1.azurestaticapps.net"])
 
+@app.route("/healthz", methods=["GET"])
+def healthz():
+    try:
+        # Optional: check Cosmos connection
+        get_user_profile("healthcheck@example.com")
+        return "OK", 200
+    except Exception as e:
+        return f"Health check failed: {e}", 500
+
+
 @app.route("/chat", methods=["POST"])
 def chat():
-    data = request.get_json()
+    data = request.get_json(force=True)
+
+    if not data or "prompt" not in data:
+        return jsonify({"error": "Missing prompt"}), 400
+
     user_id = data.get("user_id", "zil@example.com")
-    prompt = data["prompt"]
-    response = run_agent(prompt, user_id=user_id)
-    return jsonify({"response": response})
+    try:
+        response = run_agent(data["prompt"], user_id)
+        return jsonify({"response": response})
+    except Exception as e:
+        print(f"[ERROR] /chat failed: {e}")
+        return jsonify({"error": "Agent failure"}), 500
+
 
 @app.route("/", methods=["GET"])
 def index():

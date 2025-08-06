@@ -108,10 +108,9 @@ call RemovePendingQuestion with that question text to remove it from the list.
         full_prompt = preamble + "\n\n" + prompt
     else:
         full_prompt = prompt
-
-    # Run the agent with enriched input
-    return agent.invoke({"input": full_prompt}).content
-
-    # You can use user_profile to modify the prompt or pass it to the agent if needed
-    # For now, we just run the agent with the provided prompt
-    return response.get("output", "No output from agent") or "No output from agent"
+    try:
+        response = agent.invoke({"input": full_prompt})
+        return response.content if hasattr(response, "content") else str(response)
+    except Exception as e:
+        print(f"[ERROR] Agent failed: {e}")
+        return "Sorry, something went wrong while processing your request."

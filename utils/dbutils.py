@@ -6,25 +6,26 @@ key = os.getenv("AZURE_COSMOS_KEY") != None and os.getenv("AZURE_COSMOS_KEY") or
 
 client = CosmosClient(url, credential=key)
 
-database_name = client.get_database_client("AZURE_COSMOS_DATABASE")
-container = database_name.get_container_client("AZURE_COSMOS_PROFILES")
 
-def get_user_profile(user_id):
+
+def get_user_profile(user_id: str) -> dict:
     try:
-        response = container.read_item(item=user_id, partition_key=user_id)
+        # Existing logic
+        container = client.get_database_client("AZURE_COSMOS_DATABASE").get_container_client("AZURE_COSMOS_PROFILES")
+        response = container.read_item(user_id, partition_key=user_id)
         return response
-    except exceptions.CosmosResourceNotFoundError:
-        return None
-    
-def save_user_profile(user_id, profile_data):
-    profile_data['id'] = user_id  # Cosmos DB requires an 'id' field
-    profile_data['user_id'] = user_id  # Ensure user_id is also stored
-    container.upsert_item(profile_data)
+    except Exception as e:
+        print(f"[ERROR] Failed to load user profile for {user_id}: {e}")
+        return {}
 
-def upsert_user_profile(user_id, profile_data):
+def upsert_user_profile(user_id: str, profile_data: dict) -> None:
+    container = client.get_database_client("AZURE_COSMOS_DATABASE").get_container_client("AZURE_COSMOS_PROFILES")
     existing_profile = get_user_profile(user_id)
+    if not existing_profile:
+        print(f"[INFO] No existing profile found for {user_id}, creating a new one.")
+    profile_data["user_id"] = user_id
     if existing_profile:
         existing_profile.update(profile_data)
-        save_user_profile(user_id, existing_profile)
     else:
-        save_user_profile(user_id, profile_data)    
+        existing_profile = profile_data
+    container.upsert_item(existing_profile)
