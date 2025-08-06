@@ -16,3 +16,12 @@ def chat():
     prompt = data["prompt"]
     response = run_agent(prompt, user_id=user_id)
     return jsonify({"response": response})
+
+@app.route("/profile", methods=["GET"])
+def profile():
+    user_id = request.args.get("user_id", "zil@example.com")
+    profile_data = get_user_profile(user_id)
+    if profile_data:
+        return jsonify(profile_data), 200
+    else:
+        return jsonify({"error": "Profile not found"}), 404
