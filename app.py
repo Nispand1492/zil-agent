@@ -3,6 +3,8 @@ from agent import run_agent
 from utils.dbutils import get_user_profile, upsert_user_profile
 
 from flask_cors import CORS
+from agent import run_agent
+
 
 app = Flask(__name__)
 CORS(app, origins=["https://salmon-mud-01e8de810.1.azurestaticapps.net"])
