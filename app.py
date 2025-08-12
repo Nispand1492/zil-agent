@@ -1,7 +1,7 @@
 from flask import Flask, request, jsonify
 from agent import run_agent
 from utils.dbutils import get_user_profile, upsert_user_profile
-
+from auth.jwt_utils import require_auth
 from flask_cors import CORS
 from agent import run_agent
 
@@ -80,12 +80,18 @@ def reset_profile():
     return jsonify({"message": "Profile reset successfully"}), 200
 
 @app.route("/create-user", methods=["POST"])
+@require_auth
 def create_user():
     try:
         data = request.get_json(force=True)
         user_id = data["user_id"]
         name = data.get("name", "")
 
+        existing = get_user_profile(user_id)
+        if existing:
+            return jsonify({"message": "User already exists"}), 200
+        
+        print(f"[INFO] Creating user {user_id} with name {name}")
         # Default profile structure
         default_profile = {
             "user_id": user_id,
