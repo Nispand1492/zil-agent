@@ -1,12 +1,19 @@
 flask
+flask-cors
+gunicorn
+
 python-dotenv
 pyyaml
+
 openai
 langchain>=0.1.17
 langchain-openai>=0.0.7
-langchain-community
+langchain-community>=0.0.23  # ⬅️ explicitly versioned
+
 azure-cosmos
-flask-cors
 azure-identity
-gunicorn
+
+# Optional (recommended for debugging & logs)
 gunicorn[debug]
+requests  # ⬅️ required by Azure auth / JWT / token validators if you do auth
+python-jose  # ⬅️ for token validation, if using JWT from Entra ID
