@@ -79,5 +79,38 @@ def reset_profile():
     upsert_user_profile(user_id, default_profile)
     return jsonify({"message": "Profile reset successfully"}), 200
 
+@app.route("/create-user", methods=["POST"])
+def create_user():
+    try:
+        data = request.get_json(force=True)
+        user_id = data["user_id"]
+        name = data.get("name", "")
+
+        # Default profile structure
+        default_profile = {
+            "user_id": user_id,
+            "name": name,
+            "headline": "",
+            "summary": "",
+            "current_title": "",
+            "current_company": "",
+            "location": "",
+            "skills": [],
+            "tools": [],
+            "strengths": [],
+            "industries": [],
+            "experience_paragraphs": [],
+            "project_paragraphs": [],
+            "custom_profile_notes": [],
+            "pending_questions": []
+        }
+
+        upsert_user_profile(user_id, default_profile)
+        return jsonify({"message": "User created"}), 201
+
+    except Exception as e:
+        print(f"[ERROR] /create-user failed: {e}")
+        return jsonify({"error": "Failed to create user"}), 500
+
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
